@@ -3,6 +3,8 @@
 #include <limits>
 #include <optional>
 #include <fstream>
+#include <ctime>
+#include "classes\tasks.h"
 
 using namespace std;
 
@@ -22,14 +24,7 @@ bool checkingInput1and0(int choice, int correct[]){
 
 
 int main(){
-    int mainMenuChoice;
-
-    do{
-        cout << "~~~~~~~~~~~~~~~~~~~~~~~" << endl;
-        // change it to display by default and asking to create a new one if no is there
-        cout << "Do you want to enter a new task or see already existing ones?" << endl;
-        cout << "Enter 0 for no, 1 for yes: ";
-        cin >> mainMenuChoice;
-    }
-    while (mainMenuChoice!=0);
+    Task task;
+    task.setData();
+    task.Display();
 }
