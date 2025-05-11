@@ -246,7 +246,108 @@ public:
                 cerr << "Couldn't read header data" << endl;
                 oki = false;
             }
-            int getPrior(){
-                return priority;
+        }
+        else
+        {
+            cerr << "Couldn't read header length" << endl;
+            oki = false;
+        }
+
+        if (!oki)
+            return false;
+
+        bool body_has_value = false;
+        if (ifs.read((char *)&body_has_value, sizeof(body_has_value)))
+        {
+            if (body_has_value)
+            {
+                size_t body_len = 0;
+                if (ifs.read((char *)&body_len, sizeof(body_len)))
+                {
+                    string temp_body;
+                    temp_body.resize(body_len);
+                    if (ifs.read(&temp_body[0], body_len))
+                    {
+                        body = temp_body;
+                    }
+                    else
+                    {
+                        cerr << "Couldn't read body data" << endl;
+                        oki = false;
+                    }
+                }
+                else
+                {
+                    cerr << "Couldn't read body length" << endl;
+                    oki = false;
+                }
             }
-};  
+            else
+            {
+                body = nullopt;
+            }
+        }
+        else
+        {
+            cerr << "Something went wrong with body" << endl;
+            oki = false;
+        }
+
+        if (!oki)
+            return false;
+
+        if (!ifs.read((char *)&dateCreated, sizeof(dateCreated)))
+        {
+            cerr << "Couldn't read creation date" << endl;
+            oki = false;
+        }
+
+        if (!oki)
+            return false;
+
+        bool dueDate_has_value = false;
+        if (ifs.read((char *)&dueDate_has_value, sizeof(dueDate_has_value)))
+        {
+            if (dueDate_has_value)
+            {
+                size_t dueDate_len = 0;
+                if (ifs.read((char *)&dueDate_len, sizeof(dueDate_len)))
+                {
+                    string temp_dueDate;
+                    temp_dueDate.resize(dueDate_len);
+                    if (ifs.read(&temp_dueDate[0], dueDate_len))
+                    {
+                        dueDate = temp_dueDate;
+                    }
+                    else
+                    {
+                        cerr << "Couldn't read due date data" << endl;
+                        oki = false;
+                    }
+                }
+                else
+                {
+                    cerr << "Couldn't read due date length" << endl;
+                    oki = false;
+                }
+            }
+            else
+            {
+                dueDate = nullopt;
+            }
+        }
+        else
+        {
+            cerr << "Something went wrong with due date" << endl;
+            oki = false;
+        }
+
+        if (!ifs.read((char *)&priority, sizeof(priority)))
+        {
+            cerr << "Couldn't read priority" << endl;
+            oki = false;
+        }
+
+        return oki;
+    }
+};
