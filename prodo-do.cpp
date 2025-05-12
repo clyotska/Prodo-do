@@ -41,32 +41,97 @@ void writeFile()
     fout.close();
 }
 
-void readFile(){
+void readFile()
+{
     Task t;
     ifstream ifs("files/tasks.dat", ios::binary);
-    while (ifs.peek() != EOF){
+    while (ifs.peek() != EOF)
+    {
         t.deserialize(ifs);
         t.Display();
     }
 }
 
-void adding(){
+void adding()
+{
     writeFile();
 }
 
 bool isEmpty()
-{   
+{
     ifstream ifs("files/tasks.dat", ios::binary);
     return ifs.peek() == EOF;
 }
 
-void markAsComplete(){}
+bool readTask(ifstream& ifs, Task& task) {
+    if (ifs.peek() == EOF) {
+        return false;
+    }
+    return task.deserialize(ifs);
+}
+
+void writeTask(ofstream& ofs, const Task& task) {
+    task.serialize(ofs);
+}
+
+
+void markTaskAsComplete(){
+    string taskHeader;
+    cout << "Enter the header of the task you want to mark as complete: ";
+
+    getline(cin, taskHeader);
+
+    ifstream fin("files/tasks.dat", ios::binary);
+    ofstream fout_temp("files/temp.dat", ios::binary);
+
+    if (!fin.is_open()) {
+        cerr << "Couldn't open 'files/tasks.dat' to read" << endl;
+        return;
+    }
+    if (!fout_temp.is_open()) {
+        cerr << "Couldn't open 'files/temp.dat' to write" << endl;
+        fin.close();
+        return;
+    }
+
+    bool here = false;
+    Task t;
+
+    // Read tasks one by one from the original file
+    while (readTask(fin, t)) {
+        if (t.getHeader() == taskHeader) {
+            t.markAsComplete();
+            here = true;
+            writeTask(fout_temp, t);
+        } else {
+            writeTask(fout_temp, t);
+        }
+    }
+
+    fin.close();
+    fout_temp.close();
+
+    if (!here) {
+        cout << "No such task was found" << endl;
+        remove("files/temp.dat");
+    } else {
+        // Replace the original file with the temporary file
+        if (remove("files/tasks.dat") != 0) {
+            cerr << "Couldn't delete original file" << endl;
+        }
+        if (rename("files/temp.dat", "files/tasks.dat") != 0) {
+            cerr << "Couldn't rename temporary file" << endl;
+        }
+        cout << "Changes saved to file" << endl;
+    }
+}
 
 void deleting() {}
 
 void editing() {}
 
-void display() {
+void display()
+{
     cout << "---------- All your tasks: ----------" << endl;
     readFile();
 }
@@ -79,12 +144,14 @@ int main()
     {
         cout << "----------------------" << endl;
         // change it to display by default and asking to create a new one if no is there
-        if (isEmpty()){
+        if (isEmpty())
+        {
             cout << "Let's create your FIRST task!" << endl;
             adding();
             display();
         }
-        else{
+        else
+        {
             display();
         }
         cout << "----------------------" << endl;
@@ -92,21 +159,40 @@ int main()
         cout << "2. Mark Task as Complete" << endl;
         cout << "3. Edit Task" << endl;
         cout << "4. Delete Task" << endl;
-        cout << "To QUIT enter 6: "; cin >> mainMenuChoice; cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "5. Display Tasks" << endl;
+        cout << "To QUIT enter 6: ";
+        cin >> mainMenuChoice;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cout << "----------------------" << endl;
+
+        // add sorting from complete to incomplete
         // add checker for main menu
-        // add marking complete [+] and incomplete [-] before tasks
         // add editing and deleting
         // add smth to inherit
+        
         switch (mainMenuChoice)
         {
-        case 1: adding(); break;
-        case 2: markAsComplete(); break;
-        case 3: editing(); break;
-        case 4: deleting(); break;
-        case 6: cout << "Quitting the program \n"; break;
+        case 1:
+            adding();
+            break;
+        case 2:
+            markTaskAsComplete();
+            break;
+        case 3:
+            editing();
+            break;
+        case 4:
+            deleting();
+            break;
+        case 5:
+            display();
+            break;
+        case 6:
+            cout << "Quitting the program \n";
+            break;
         default:
-            cout << "Wrong choice! Please, try again!" << endl; break;
+            cout << "Wrong choice! Please, try again!" << endl;
+            break;
         }
     } while (mainMenuChoice != 6);
 }

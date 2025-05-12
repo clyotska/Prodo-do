@@ -25,11 +25,12 @@ protected:
     optional<string> body;
     time_t dateCreated;
     optional<string> dueDate;
+    bool complete;
     int priority;
 
 public:
     Task(string h = "Unknown", optional<string> b = nullopt, time_t dc = 0,
-        optional<string> dd = nullopt, int p = 1) : header(h), body(b), dateCreated(dc), dueDate(dd), priority(p) {};
+        optional<string> dd = nullopt, bool c = false, int p = 1) : header(h), body(b), dateCreated(dc), dueDate(dd), complete(c), priority(p) {};
 
     void setData()
     {
@@ -149,8 +150,22 @@ public:
         }
     }
 
+    void markAsComplete(){
+        complete = true;
+    }
+
+    bool getCompletionStatus(){
+        return complete;
+    }
+
     void Display() const
-    {
+    {   
+        if (complete){
+            cout << "[+] ";
+        }
+        else{
+            cout << "[-] ";
+        }
         cout << "Task: " << header << endl;
         cout << "Date of creation: " << ctime(&dateCreated);
         if (dueDate.has_value())
@@ -218,6 +233,8 @@ public:
             ofs.write((char *)&dueDate_len, sizeof(dueDate_len));
             ofs.write(dueDate.value().c_str(), dueDate_len);
         }
+
+        ofs.write((char*)&complete, sizeof(complete));
 
         ofs.write((char *)&priority, sizeof(priority));
 
@@ -341,6 +358,15 @@ public:
             cerr << "Something went wrong with due date" << endl;
             oki = false;
         }
+
+        if (!ifs.read((char *)&complete, sizeof(complete)))
+        {
+            cerr << "Couldn't read completion status" << endl;
+            oki = false;
+        }
+
+        if (!oki)
+            return false;
 
         if (!ifs.read((char *)&priority, sizeof(priority)))
         {
