@@ -161,7 +161,7 @@ public:
         {
             cout << body.value() << endl;
         }
-        cout << "Priority: " << priority << endl;
+        cout << "Priority: " << priority << endl << "-----------------" << endl;
     }
 
     string getHeader() const
