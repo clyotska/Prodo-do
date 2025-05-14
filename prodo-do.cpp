@@ -126,6 +126,110 @@ void markTaskAsComplete(){
     }
 }
 
+void sortingComplete(){
+    Task t;
+    ofstream foutC("files/taskComplete.dat", ios::binary | ios::trunc);
+    ofstream foutI("files/tasksIncomplete.dat", ios::binary | ios::trunc);
+    ifstream fin("files/tasks.dat", ios::binary);
+
+    if (!fin.is_open() || !foutC.is_open() || !foutI.is_open()) {
+        cerr << "Error: Couldn't open necessary files for sorting." << endl;
+        // Clean up any files that might have been opened
+        if (fin.is_open()) fin.close();
+        if (foutC.is_open()) foutC.close();
+        if (foutI.is_open()) foutI.close();
+        // Remove temporary files in case of error
+        remove("files/taskComplete.dat");
+        remove("files/tasksIncomplete.dat");
+        return;
+    }
+
+
+    while(readTask(fin, t))
+    {
+        if (t.getCompletionStatus() == true){
+            writeTask(foutC, t);
+            if (foutC.fail()) { // Check for write errors
+                cerr << "Error writing to taskComplete.dat during sorting." << endl;
+                break; // Exit loop on error
+            }
+        }
+        }
+        else{
+            writeTask(foutI, t);
+            if (foutI.fail()) { // Check for write errors
+                cerr << "Error writing to tasksIncomplete.dat during sorting." << endl;
+                break; // Exit loop on error
+            }
+        }
+    }
+
+    if (fin.fail() && !fin.eof()) {
+        cerr << "Error reading from tasks.dat during sorting." << endl;
+    }
+
+    fin.close();
+    foutC.close();
+    foutI.close();
+
+    ifstream finC("files/taskComplete.dat", ios::binary);
+    ifstream finI("files/tasksIncomplete.dat", ios::binary);
+
+    ofstream foutTemp("files/tasksSorted.dat", ios::binary | ios::trunc);
+
+    if (!foutSorted.is_open() || !finI.is_open() || !finC.is_open()) {
+        cerr << "Error: Couldn't open files for merging during sorting." << endl;
+         // Clean up files
+        if (foutSorted.is_open()) foutSorted.close();
+        if (finI.is_open()) finI.close();
+        if (finC.is_open()) finC.close();
+        // Remove temporary files
+        remove("files/taskComplete.dat");
+        remove("files/tasksIncomplete.dat");
+        remove("files/tasksSorted.dat");
+        return;
+    
+    Task TempTask;
+    while(readTask(finI, TempTask)){
+        writeTask(foutTemp, TempTask);
+        if (foutTemp.fail()) { // Check for write errors
+            cerr << "Error writing incomplete task to tasksSorted.dat." << endl;
+            break; // Exit loop on error
+    }
+    if (finI.fail() && !finI.eof()) {
+        cerr << "Error reading from tasksIncomplete.dat during merge." << endl;
+    }
+
+    while(readTask(finC, TempTask)){
+        writeTask(foutTemp, TempTask);
+        if (foutTemp.fail()) { // Check for write errors
+            cerr << "Error writing incomplete task to tasksSorted.dat." << endl;
+            break; // Exit loop on error
+    }
+    if (finC.fail() && !finC.eof()) {
+        cerr << "Error reading from tasksComplete.dat during merge." << endl;
+    }
+
+    finI.close();
+    finC.close();
+    foutTemp.close();
+
+    remove("files/taskComplete.dat");
+    remove("files/tasksIncomplete.dat");
+
+
+    // Replace the original file with the sorted file
+    if (remove("files/tasks.dat") != 0) {
+        cerr << "Error deleting original file during sorting." << endl;
+         // Handle error: The original file might still exist, and the sorted temp file too.
+    }
+    if (rename("files/tasksTemp.dat", "files/tasks.dat") != 0) {
+        cerr << "Error renaming sorted temporary file." << endl;
+         // Handle error: The sorted temp file might still exist.
+    }
+    cout << "Tasks sorted by completion status." << endl;
+}
+
 void deleting() {}
 
 void editing() {}
