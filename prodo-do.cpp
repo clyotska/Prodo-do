@@ -138,15 +138,9 @@ void markTaskAsComplete()
     else
     {
         // replace the original file with the temporary file and consequently check the removing operation
-        if (remove("files/tasks.dat") != 0)
-        {
-            cerr << "Couldn't delete original file" << endl;
-        }
+        remove("files/tasks.dat");
         // rename the file and check whether the operation was successful
-        if (rename("files/temp.dat", "files/tasks.dat") != 0)
-        {
-            cerr << "Couldn't rename temporary file" << endl;
-        }
+        rename("files/temp.dat", "files/tasks.dat");
         cout << "Changes saved to file" << endl;
     }
 }
@@ -184,28 +178,14 @@ void sortingComplete()
         if (t.getCompletionStatus() == true)
         {
             writeTask(foutC, t);
-            if (foutC.fail())
-            { // Check for write errors
-                cerr << "Error writing to taskComplete.dat during sorting." << endl;
-                break; // Exit loop on error
-            }
         }
         else
         {
             writeTask(foutI, t);
-            if (foutI.fail())
-            { // Check for write errors
-                cerr << "Error writing to tasksIncomplete.dat during sorting." << endl;
-                break; // Exit loop on error
-            }
         }
     }
 
     // Check if the read loop finished due to an error other than EOF
-    if (fin.fail() && !fin.eof())
-    {
-        cerr << "Error reading from tasks.dat during sorting." << endl;
-    }
 
     fin.close();
     foutC.close();
@@ -219,7 +199,7 @@ void sortingComplete()
     // Check if files for merging opened successfully
     if (!foutSorted.is_open() || !finI.is_open() || !finC.is_open())
     {
-        cerr << "Error: Couldn't open files for merging during sorting." << endl;
+        cerr << "Couldn't open files for merging during sorting." << endl;
         // Clean up files
         if (foutSorted.is_open())
             foutSorted.close();
@@ -239,30 +219,12 @@ void sortingComplete()
     while (readTask(finI, tempTask))
     {
         writeTask(foutSorted, tempTask);
-        if (foutSorted.fail())
-        { // Check for write errors
-            cerr << "Error writing incomplete task to tasksSorted.dat." << endl;
-            break; // Exit loop on error
-        }
-    }
-    if (finI.fail() && !finI.eof())
-    {
-        cerr << "Error reading from tasksIncomplete.dat during merge." << endl;
     }
 
     // Then copy complete tasks
     while (readTask(finC, tempTask))
     {
         writeTask(foutSorted, tempTask);
-        if (foutSorted.fail())
-        { // Check for write errors
-            cerr << "Error writing complete task to tasksSorted.dat." << endl;
-            break; // Exit loop on error
-        }
-    }
-    if (finC.fail() && !finC.eof())
-    {
-        cerr << "Error reading from taskComplete.dat during merge." << endl;
     }
 
     finI.close();
@@ -274,67 +236,87 @@ void sortingComplete()
     remove("files/tasksIncomplete.dat");
 
     // Replace the original file with the sorted file
-    if (remove("files/tasks.dat") != 0)
-    {
-        cerr << "Error deleting original file during sorting." << endl;
-        // Handle error: The original file might still exist, and the sorted temp file too.
-    }
-    if (rename("files/tasksSorted.dat", "files/tasks.dat") != 0)
-    {
-        cerr << "Error renaming sorted temporary file." << endl;
-         // Handle error: The sorted temp file might still exist.
-    }
+    remove("files/tasks.dat");
+    rename("files/tasksSorted.dat", "files/tasks.dat");
     cout << "Tasks sorted by completion status." << endl;
 }
 
-/*
-Ilya zaraza dobav' komenty k svoemu kodu sam. Ya ustala i ne obyazana. !!!!!
-*/
-void deleting() {
+
+void deleting() { // a function to delete tasks
+
     Task t;
     string temp;
+    cout << endl;
     readFile();
+    cout << endl;
+    // user inputs the header they want to delete
     cout << "Enter the task's header you want to delete: "; getline(cin, temp);
     ofstream tempf("files/temp.dat", ios::binary);
     ifstream ifs("files/tasks.dat", ios::binary);
-    while(t.deserialize(ifs)){
+    
+    // the loop ignores the task with user's header and writes everything else to a temp file
+    while(readTask(ifs, t)){
         if(t.getHeader() != temp){
-            t.serialize(tempf);
+            writeTask(tempf, t);
         }
     }
+
     ifs.close();
     tempf.close();
+
+    // then temp and tasks are swapped
     remove("files/tasks.dat");
     rename("files/temp.dat", "files/tasks.dat");
     sortingComplete();
+
 }
 
-void editing() {
+void editing() { // a function to "edit" tasks
+
     Task t;
-    Task task;
     string temp;
-    cout << "Enter the task's header: "; getline(cin, temp);
+
+    // user enters the header of a task they want to be deleted
+    // loop either finds such a task or it doesn't
+
+    cout << "Enter the task's header you want to edit: "; getline(cin, temp);
     ifstream ifs("files/tasks.dat", ios::binary);
     ofstream tempf("files/temp.dat", ios::binary);
-    while(t.deserialize(ifs)){
-        if(t.getHeader() != temp){
-            t.serialize(tempf);
-            task.setData();
-            task.serialize(tempf);
+
+    bool here = false;
+    // if the loop finds the task -> it's recreated
+    // other tasks are just copied and pasted to a temp file
+    while(readTask(ifs, t)){
+        if(t.getHeader() == temp){
+            here = true;
+            cout << endl;
+            t.setData();
+            writeTask(tempf, t);
+        }
+        else{
+            writeTask(tempf, t);
         }
     }
+
     ifs.close();
     tempf.close();
-    remove("files/tasks.dat");
-    rename("files/temp.dat", "files/tasks.dat");
-    sortingComplete();
-    
 
+    // if no such task was found, the error is printed and temp file is discarded
+    if (!here){
+        cout << "No such record exists!" << endl;
+        remove("files/temp.dat");
+    }
+    else{
+        remove("files/tasks.dat");
+        rename("files/temp.dat", "files/tasks.dat");
+        sortingComplete();
+    }
 }
 
 // a display function, where I (Alina) included sorting and used readFile
 void display()
 {
+    cout << endl;
     cout << "---------- All your tasks: ----------" << endl;
     sortingComplete();
     readFile();
@@ -346,13 +328,19 @@ int main()
 
     do
     {
-        cout << "----------------------" << endl;
         // change it to display by default and asking to create a new one if no is there
         if (isEmpty()) // if file is empty we jump to creation
         {
-            cout << "Let's create your FIRST task!" << endl;
+            cout << "----------------------" << endl;
+            cout << "Let's create your task!" << endl;
             adding();
             display();
+        }
+
+        else if (mainMenuChoice == 5)
+        { 
+            // display is already written in the menu as do and we skip it for display iteration
+            // display will work bc of the loop
         }
         else // if file is not empty, program displays the tasks
         {
@@ -385,10 +373,6 @@ int main()
         }
 
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-        // add checker for main menu
-        // add editing and deleting
-        // add smth to inherit
 
         switch (mainMenuChoice) // a switch for menu options
         {

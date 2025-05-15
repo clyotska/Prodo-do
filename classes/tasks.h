@@ -19,11 +19,26 @@ Ilya Kolesnikov (U2410113)
 Amir Madjidov (U2410125)
 Jahongir Davronov (U2410066)
 */
+
+// technically, there was no need to inherit due date
+// it was possible to implement it inside the task
+
+// BUT
+
+// we wanted to implement a functionality to change the due date, 
+// so theoretically a task could've had multiple due dates
+// but we are to lazy
 class DueDate{
+    // protected member
     protected:
         optional<string> dueDate;
+    
+    // public members
     public:
-        DueDate(optional<string> a): dueDate(a){}
+        // due date both parametrized and default constructor
+        DueDate(optional<string> a = nullopt): dueDate(a){}
+
+        // a setter for due date
         void setData(){
             bool input_success1 = false;
             string temp;
@@ -37,19 +52,22 @@ class DueDate{
                 getline(cin, temp);
                 if (cin.good())
                 {
-                    if (!temp.empty())
+                    if (!temp.empty())  // check whether user provided input for due date
                     {
-                        if (temp.length() == 10)
+                        if (temp.length() == 10) // check the format
                         {
-                        string day = temp.substr(0, 2);
-                        string month = temp.substr(3, 2);
-                        string year = temp.substr(6, 4);
+                        string day = temp.substr(0, 2); // get the day out of the string
+                        string month = temp.substr(3, 2); // get the month out of the string
+                        string year = temp.substr(6, 4); // get the year out of the string
+                        
+                        // check whether the date satisfies the format of days(1-31), month(1-12), year
+                        // and whether the date is in the future
                         if (temp[2] == '.' && temp[5] == '.' && stoi(day) >= 1 && stoi(day) <= 31 && stoi(month) >= 1 && stoi(month) <= 12 && stoi(year) >= lT->tm_year + 1900 && stoi(month) >= lT->tm_mon + 1 && stoi(day) >= lT->tm_mday)
                         {
                             input_success1 = true;
                             dueDate = temp;
                         }
-                        else // if user is a little deranged (little dummy dumbo) we try again :3
+                        else // if user is a little silly we try again :3
                         {
                             cout << "Invalid input. Please enter the actual date" << endl;
                             cin.clear();
@@ -70,17 +88,33 @@ class DueDate{
         }
         }
     };
+class Task: public DueDate{
 
-                        
+    // protected members for Task
+    protected:
+    string header;
+    optional<string> body;
+    time_t dateCreated;
+    bool complete;
+    int priority;   
 
-class Task: public DueDate
-
+    // public members for task
+    public:
+    Task(string h = "Unknown", optional<string> b = nullopt, time_t dc = 0,
+        optional<string> dd = nullopt, bool c = false, int p = 1) : header(h), body(b), dateCreated(dc), DueDate(dd), complete(c), priority(p) { 
+        }
+    
+    // setter for task
     void setData()
     {
-        cout << "Enter the task: ";
-        getline(cin, header);
 
-        time(&dateCreated);
+        do {
+            cout << "Enter the task (main description/header): ";
+            getline(cin, header); // we set header
+        } while (header == "Unknown" || header.empty()); // we don't let user leave it empty
+
+
+        time(&dateCreated); // we set time
 
 
         // checking due date
@@ -167,6 +201,7 @@ class Task: public DueDate
 
     void Display() const // const to show that this code doesn't change task parameters
     {
+        cout << "-----------------" << endl;
         // display function
         if (complete)
         {
@@ -186,7 +221,8 @@ class Task: public DueDate
         {
             cout << body.value() << endl;
         }
-        cout << "Priority: " << priority << endl << "-----------------" << endl;
+        cout << "Priority: " << priority << endl;
+        cout << "-----------------" << endl << endl;
     }
 
     string getHeader() const // another getter
@@ -400,4 +436,5 @@ class Task: public DueDate
 
         return oki;
     }
+
 };
