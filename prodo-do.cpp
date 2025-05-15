@@ -282,7 +282,7 @@ void sortingComplete()
     if (rename("files/tasksSorted.dat", "files/tasks.dat") != 0)
     {
         cerr << "Error renaming sorted temporary file." << endl;
-        // Handle error: The sorted temp file might still exist.
+         // Handle error: The sorted temp file might still exist.
     }
     cout << "Tasks sorted by completion status." << endl;
 }
@@ -290,9 +290,47 @@ void sortingComplete()
 /*
 Ilya zaraza dobav' komenty k svoemu kodu sam. Ya ustala i ne obyazana. !!!!!
 */
-void deleting() {}
+void deleting() {
+    Task t;
+    string temp;
+    readFile();
+    cout << "Enter the task's header you want to delete: "; getline(cin, temp);
+    ofstream tempf("files/temp.dat", ios::binary);
+    ifstream ifs("files/tasks.dat", ios::binary);
+    while(t.deserialize(ifs)){
+        if(t.getHeader() != temp){
+            t.serialize(tempf);
+        }
+    }
+    ifs.close();
+    tempf.close();
+    remove("files/tasks.dat");
+    rename("files/temp.dat", "files/tasks.dat");
+    sortingComplete();
+}
 
-void editing() {}
+void editing() {
+    Task t;
+    Task task;
+    string temp;
+    cout << "Enter the task's header: "; getline(cin, temp);
+    ifstream ifs("files/tasks.dat", ios::binary);
+    ofstream tempf("files/temp.dat", ios::binary);
+    while(t.deserialize(ifs)){
+        if(t.getHeader() != temp){
+            t.serialize(tempf);
+            task.setData();
+            task.serialize(tempf);
+        }
+    }
+    ifs.close();
+    tempf.close();
+    remove("files/tasks.dat");
+    rename("files/temp.dat", "files/tasks.dat");
+    sortingComplete();
+    
+
+}
 
 // a display function, where I (Alina) included sorting and used readFile
 void display()

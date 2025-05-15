@@ -19,58 +19,32 @@ Ilya Kolesnikov (U2410113)
 Amir Madjidov (U2410125)
 Jahongir Davronov (U2410066)
 */
+class DueDate{
+    protected:
+        optional<string> dueDate;
+    public:
+        DueDate(optional<string> a): dueDate(a){}
+        void setData(){
+            bool input_success1 = false;
+            string temp;
 
-class Task
-{
+            time_t t = time(nullptr);
+            tm *lT = localtime(&t);
 
-protected:
-    // all the protected members
-    string header;
-    optional<string> body;
-    time_t dateCreated;
-    optional<string> dueDate;
-    bool complete;
-    int priority;
-
-public:
-    // Constructor, which we don't even use :)
-    Task(string h = "Unknown", optional<string> b = nullopt, time_t dc = 0,
-        optional<string> dd = nullopt, bool c = false, int p = 1) : header(h), body(b), dateCreated(dc), dueDate(dd), complete(c), priority(p) {};
-
-    void setData()
-    {
-        // gigantic ahh function of setting all the data
-        // btw this due date was written by Ilya
-        // Alina (me) wrote all the comments!!
-        string temp;
-        cout << "Enter the task: ";
-        getline(cin, header);
-
-        // proper initialization of dateCreated using ctime
-        // basically just takes date from your device
-        time(&dateCreated);
-        time_t t = time(nullptr);
-        tm *lT = localtime(&t);
-
-        // checking due date
-        bool input_success1 = false;
-        while (!input_success1)
-        {
-            cout << "Enter due date(DD.MM.YYYY) or leave this field empty: ";
-            getline(cin, temp);
-            if (cin.good())
+            while (!input_success1)
             {
-                if (!temp.empty()) // if user decided to add due date
+                cout << "Enter due date(DD.MM.YYYY) or leave this field empty: ";
+                getline(cin, temp);
+                if (cin.good())
                 {
-                    if (temp.length() == 10) // if format of the date is correct
+                    if (!temp.empty())
                     {
-                        string day = temp.substr(0, 2);   // here ilya finds day
-                        string month = temp.substr(3, 2); // here ilya finds month
-                        string year = temp.substr(6, 4);  // here ilya finds year
-
-                        // below Ilya checks whether due date is correct
-                        // basically the range of day, month and year and that due date is not in the past
-                        if (temp[2] == '.' && temp[5] == '.' && stoi(day) >= 1 && stoi(day) <= 31 && stoi(month) >= 1 && stoi(month) <= 12 && stoi(year) >= lT->tm_year + 1900 && stoi(month) >= lT->tm_mon && stoi(day) >= lT->tm_mday)
+                        if (temp.length() == 10)
+                        {
+                        string day = temp.substr(0, 2);
+                        string month = temp.substr(3, 2);
+                        string year = temp.substr(6, 4);
+                        if (temp[2] == '.' && temp[5] == '.' && stoi(day) >= 1 && stoi(day) <= 31 && stoi(month) >= 1 && stoi(month) <= 12 && stoi(year) >= lT->tm_year + 1900 && stoi(month) >= lT->tm_mon + 1 && stoi(day) >= lT->tm_mday)
                         {
                             input_success1 = true;
                             dueDate = temp;
@@ -94,7 +68,24 @@ public:
                 }
             }
         }
+        }
+    };
 
+                        
+
+class Task: public DueDate
+
+    void setData()
+    {
+        cout << "Enter the task: ";
+        getline(cin, header);
+
+        time(&dateCreated);
+
+
+        // checking due date
+
+        DueDate::setData();
         // checking the choice of description
         int description_choice;
         bool input_success2 = false;
@@ -195,8 +186,7 @@ public:
         {
             cout << body.value() << endl;
         }
-        cout << "Priority: " << priority << endl
-            << "-----------------" << endl;
+        cout << "Priority: " << priority << endl << "-----------------" << endl;
     }
 
     string getHeader() const // another getter
